@@ -28,8 +28,8 @@ Finetuning was done with PEFT. And instructions setup.
 
 Final metrics:
 
-train steps - train loss - val loss
-1200    1.164300 	1.217549    dolly-v2-3b-lora
+train steps - train loss - val loss \
+1200    1.164300 	1.217549    dolly-v2-3b-lora \
 500 	1.197700 	1.222749    dolly-v2-7b-lora
 
 ## Ice breaker
