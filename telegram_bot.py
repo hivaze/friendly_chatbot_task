@@ -114,7 +114,7 @@ async def communication_answer(message: types.Message, state: FSMContext, is_ima
 
         text_history = "\n".join(history) + "\nYou:"
 
-        if len(history) >= 20:  # dumbiest way, but.... here we need some cumulative score from emotions model and threshold I think...
+        if len(history) <= 20:  # dumbiest way, but.... here we need some cumulative score from emotions model and threshold I think...
             prompt = PROMPT_NO_INPUT_FORMAT.format(instruction=INSTRUCTION_NEW, response=text_history)
         else:
             prompt = PROMPT_NO_INPUT_FORMAT.format(instruction=INSTRUCTION_KNOWN, response=text_history)

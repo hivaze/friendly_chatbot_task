@@ -43,6 +43,11 @@ Ot we can calculate cumulative emotion score and do threshold...
 No docker for now (its easy, but too late...) Just `python3 telegram_bot.py` after requirements... \
 And you need to setup 2 env vars `MODEL` name from models and `TG_BOT_TOKEN`.
 
+## How to measure quality
+
+FastChat and Vicuna propose to use GPT4 and ChatGPT, FastChat even have some code for it, but i didnt use any of it... \
+BTW deploying of llms with fastchat can be done very quickly...
+
 ## Other stuff
 
 Maybe some other ideas can be found in code and in raw_task_notes, but too late to write down it here...
