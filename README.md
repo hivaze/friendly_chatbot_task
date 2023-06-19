@@ -71,11 +71,14 @@ Main idea here was a CLM model with good dataset... and prompts.. \
 For this i use scoring of users messages from pretrained model `michellejieli/emotion_text_classifier`
 
 Two type of scores: positive and negative. So there are 3 instruction prompt types according to a task. \
+
 INSTRUCTION_PROMPT_GENERAL: "Get to know a person by chit-chatting and providing long answers and questions. Try not to end the dialogue as long as possible. Complete a phrase, acting like an interlocutor." \
+
 INSTRUCTION_PROMPT_FLIRT: "Flirt with a person by chit-chatting and asking personal questions. Complete a phrase, acting like an interlocutor." \
+
 INSTRUCTION_PROMPT_FIX: "Try to understand why a person experiences negative emotions. And politely establish a good relationship with him. Complete a phrase, acting like an interlocutor."
 
-To switch them I use thresholds: \
+To switch them I use 2 thresholds: \
 ```
 negative_score > 0.3: INSTRUCTION_PROMPT_FIX \
 positive_score > 0.5: INSTRUCTION_PROMPT_FLIRT \
