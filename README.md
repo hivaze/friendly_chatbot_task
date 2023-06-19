@@ -89,8 +89,21 @@ But the best solution here seems to be `PPOTrainer` with a reward model from trl
 
 ## How to start
 
-No docker for now (its easy, but too late...) Just `python3 telegram_bot.py` after requirements... \
-And you need to setup 2 env vars `MODEL` name from models and `TG_BOT_TOKEN`.
+Dockerfile was generated via ChatGPT :)
+
+Build image:
+```
+docker build -t ai_friend_bot .
+```
+
+Run container:
+```
+docker run --gpus all -e MODEL=model_name -e TG_BOT_TOKEN=my_token ai_friend_bot
+```
+
+Note: that you need to setup 2 env vars `MODEL` name from models folder and `TG_BOT_TOKEN`.
+
+Note: if you want cuda, you need to install nvidia-container-toolkit
 
 ## How to measure quality
 
