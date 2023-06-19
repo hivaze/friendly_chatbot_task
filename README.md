@@ -72,11 +72,11 @@ For this i use scoring of users messages from pretrained model `michellejieli/em
 
 Two type of scores: positive and negative. So there are 3 instruction prompt types according to a task.
 
-INSTRUCTION_PROMPT_GENERAL: "Get to know a person by chit-chatting and providing long answers and questions. Try not to end the dialogue as long as possible. Complete a phrase, acting like an interlocutor."
-
-INSTRUCTION_PROMPT_FLIRT: "Flirt with a person by chit-chatting and asking personal questions. Complete a phrase, acting like an interlocutor."
-
-INSTRUCTION_PROMPT_FIX: "Try to understand why a person experiences negative emotions. And politely establish a good relationship with him. Complete a phrase, acting like an interlocutor."
+```
+INSTRUCTION_PROMPT_GENERAL = "Get to know a person by chit-chatting and providing long answers and questions. Try not to end the dialogue as long as possible. Complete a phrase, acting like an interlocutor."
+INSTRUCTION_PROMPT_FLIRT = "Flirt with a person by chit-chatting and asking personal questions. Complete a phrase, acting like an interlocutor."
+INSTRUCTION_PROMPT_FIX = "Try to understand why a person experiences negative emotions. And politely establish a good relationship with him. Complete a phrase, acting like an interlocutor."
+```
 
 To switch them I use 2 thresholds:
 ```
