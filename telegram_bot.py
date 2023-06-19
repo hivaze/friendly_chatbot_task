@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 
 import torch
@@ -18,37 +17,38 @@ config = PeftConfig.from_pretrained(peft_model_path)
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, padding_side="left")
 model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path,
                                              device_map="auto",
-                                             torch_dtype=torch.float16)
+                                             # load_in_8bit=True,
+                                             torch_dtype=torch.bfloat16)
 model.cuda()
 
 model = PeftModel.from_pretrained(model, peft_model_path)
 model.eval()
 
+print('Model loaded')
+
 INTRO_PROMPT = "You are 20 years old, your name is Arthur, you are a young man, designer from San Francisco. You " \
                     "are a kind and empathetic interlocutor. You are talking to a person. Below is an instruction " \
                     "that describes a task. Write a response that appropriately completes the request."
-INSTRUCTION_PROMPT_NEW = "You are trying to get to know a person, to attract him by asking him questions about " \
-                              "him. Complete a phrase, acting like an interlocutor."
-INSTRUCTION_PROMPT_KNOWN = "You are trying to flirt with a person by asking personal questions. Complete a " \
-                                "phrase, acting like an interlocutor."
+INSTRUCTION_PROMPT_NEW = "You are trying to get to know a person by chit-chatting and providing long " \
+                         "answers and questions. Complete a phrase, acting like an interlocutor."
+INSTRUCTION_PROMPT_KNOWN = "You are trying to flirt with a person by chit-chatting and asking personal questions. " \
+                           "Complete a phrase, acting like an interlocutor."
 
 GENERATION_PARAMS = {
-    'length_penalty': -10.0,  # penalize long sentences
-    'repetition_penalty': 1.0,  # to not repeat the prompt in straight way
+    # 'length_penalty': -10.0,  # penalize long sentences
+    'repetition_penalty': 1.1,  # to not repeat the prompt in straight way
     'top_p': 0.9,
-    'top_k': 50,
+    'top_k': 100,
     'num_beams': 1,
     'eos_token_id': 187,  # until \n
     'forced_eos_token_id': 187,  # until \n
-    'temperature': 0.5,
+    'temperature': 0.6,
     'max_new_tokens': 100,  # strong length limit
     'use_cache': True,
     'remove_invalid_values': True
 }
 
 PROMPT_TEMPLATE = "{intro}\n\n### Instruction:\n{instruction}\n\n### Response:\n{response}"
-
-logger = logging.getLogger(__name__)
 
 bot = Bot(token=os.environ['TG_BOT_TOKEN'])
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -106,13 +106,15 @@ async def communication_answer(message: types.Message, state: FSMContext, is_ima
 
             input_ids = tokenizer.encode(prompt, return_tensors='pt').cuda()
 
-            answer = tokenizer.batch_decode(model.generate(input_ids, **GENERATION_PARAMS))[0]
+            answer = tokenizer.batch_decode(model.generate(inputs=input_ids, **GENERATION_PARAMS))[0]
             answer = answer[len(prompt):].strip()  # remove prompt
 
             if answer.endswith("\n\n### End"):  # dumb way... must ne like in instruct_pipeline.py here
                 answer = answer[:11]
 
             await message.reply(answer)
+
+            print('Sending answer:', answer)
 
         history = history + [f'You: {answer}']
 
