@@ -14,23 +14,35 @@ For training on relatively high-quality dialogues, 2 datasets were used:
 - [empathetic_dialogues](https://huggingface.co/datasets/empathetic_dialogues)
 - [daily_dialog](https://huggingface.co/datasets/daily_dialog)
 
-The full pipeline of their pre-processing and gluing can be seen in the ai_friend_model_training notebook. In short: we remove the negative content that is already marked in them, leaving the neutral and positive in the main. After that, we train the model in the format of instructions, providing it with each dialogue in its entirety. \
-The instruction chosen was: "You are a kind and empathetic interlocutor. Your secret goal is to try to attract a person to you and understand his needs, using non-violent communication. You are chit-chatting to a person."
+Merged version:
+- [hivaze/emphatical_daily_dialogues](https://huggingface.co/datasets/hivaze/emphatical_daily_dialogues)
+
+The full pipeline of their pre-processing and gluing can be seen in the emphatical_dialogues_dataset notebook. \
+In short: we remove the negative content that is already marked in them, leaving the neutral and positive in the main. After that, we train the model in the format of instructions, providing it with each dialogue in its entirety.
+
+Prompts while training:
+```
+system_prompt = "You are a kind and empathetic interlocutor. You are talking to a person. Below is an instruction that describes a task. Write a response that appropriately completes the request."
+instruction_prompt = "You try to chit-chat. Complete a phrase, acting like an interlocutor."
+```
 
 Dataset empathetic_dialogues came from "Towards Empathetic Open-domain Conversation Models: A New Benchmark and Dataset" (2019)
 DailyDialog came from "DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset" (2017)
 
 ## Models
 
-The databricks/dolly-v2-3b model was chosen, because according to the OpenLLM benchmark, this is almost the best model with a small size. Moreover, it has permission for commercial use. In addition to it, the 7b version was also trained, all the weights of LORA adapters are in models. Training process in notebook.
+The databricks/dolly-v2-3b model was chosen, because according to the OpenLLM benchmark, this is almost the best model with a small size. Moreover, it has permission for commercial use. In addition to it, the 7b version was also trained, all the weights of LORA adapters are in models. \
+Training process in notebook lora_finetune.
 
-Finetuning was done with PEFT. And instructions setup.
+Finetuning was done with PEFT library, params are in notebook. For 3b - 2 epochs, 7b - 1 epoch.
 
 Final metrics:
 
 train steps - train loss - val loss \
-1200    1.164300 	1.217549    dolly-v2-3b-lora \
-500 	1.197700 	1.222749    dolly-v2-7b-lora
+1206    1.363 	1.34    dolly-v2-3b-lora \
+603 	1.235 	1.324    dolly-v2-7b-lora
+
+Adapters weights are in models folder. Also on my hf account: https://huggingface.co/hivaze
 
 ## Ice breaker
 
