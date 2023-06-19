@@ -9,7 +9,7 @@ The main idea of the approach: we use prompts, we train a model, the license of 
 
 Note WIP notes are in `raw_task_notes.md`
 
-### Used datasets
+## Used datasets
 
 For training on relatively high-quality dialogues, 2 datasets were used:
 - [empathetic_dialogues](https://huggingface.co/datasets/empathetic_dialogues)
@@ -17,6 +17,8 @@ For training on relatively high-quality dialogues, 2 datasets were used:
 
 Merged version:
 - [hivaze/emphatical_daily_dialogues](https://huggingface.co/datasets/hivaze/emphatical_daily_dialogues)
+
+Overall 20k dialogues of different lengths in train, 2k in validation. See dataset card for more info.
 
 The full pipeline of their pre-processing and gluing can be seen in the emphatical_dialogues_dataset notebook. \
 In short: we remove the negative content that is already marked in them, leaving the neutral and positive in the main. After that, we train the model in the format of instructions, providing it with each dialogue in its entirety.
