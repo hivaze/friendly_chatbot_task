@@ -7,7 +7,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.utils.executor import Executor
 from peft import PeftModel, PeftConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
 # from instruct_pipeline import InstructionTextGenerationPipeline
 
@@ -15,34 +15,43 @@ peft_model_path = f"models/{os.environ['MODEL']}"
 config = PeftConfig.from_pretrained(peft_model_path)
 
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, padding_side="left")
-model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path,
+llm_model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path,
                                              device_map="auto",
-                                             # load_in_8bit=True,
+                                             load_in_8bit=True,
                                              torch_dtype=torch.bfloat16)
-model.cuda()
+# model.cuda()
 
-model = PeftModel.from_pretrained(model, peft_model_path)
-model.eval()
+llm_model = PeftModel.from_pretrained(llm_model, peft_model_path)
+llm_model.eval()
 
-print('Model loaded')
+print('LLM model loaded')
 
-INTRO_PROMPT = "You are 20 years old, your name is Arthur, you are a young man, designer from San Francisco. You " \
-                    "are a kind and empathetic interlocutor. You are talking to a person. Below is an instruction " \
-                    "that describes a task. Write a response that appropriately completes the request."
-INSTRUCTION_PROMPT_NEW = "You are trying to get to know a person by chit-chatting and providing long " \
-                         "answers and questions. Complete a phrase, acting like an interlocutor."
-INSTRUCTION_PROMPT_KNOWN = "You are trying to flirt with a person by chit-chatting and asking personal questions. " \
+emotional_model = pipeline("sentiment-analysis", model="michellejieli/emotion_text_classifier", device_map='auto')
+print('Emotional clf model loaded')
+
+INTRO_PROMPT = "You are 20 years old, your name is Arthur, you are a friendly young man, designer from San Francisco. " \
+               "You are a kind and empathetic interlocutor. You are talking to a new person. Below is an " \
+               "instruction that describes a task."
+
+INSTRUCTION_PROMPT_GENERAL = "Get to know a person by chit-chatting and providing long answers and questions. Try not " \
+                             "to end the dialogue as long as possible. Complete a phrase, acting like an interlocutor."
+
+INSTRUCTION_PROMPT_FLIRT = "Flirt with a person by chit-chatting and asking personal questions. " \
                            "Complete a phrase, acting like an interlocutor."
+
+INSTRUCTION_PROMPT_FIX = "Try to understand why a person experiences negative emotions. And politely establish a good " \
+                         "relationship with him. Complete a phrase, acting like an interlocutor."
 
 GENERATION_PARAMS = {
     # 'length_penalty': -10.0,  # penalize long sentences
+    # 'length_penalty': 100.0,  # penalize short sentences
     'repetition_penalty': 1.1,  # to not repeat the prompt in straight way
     'top_p': 0.9,
     'top_k': 100,
     'num_beams': 1,
     'eos_token_id': 187,  # until \n
     'forced_eos_token_id': 187,  # until \n
-    'temperature': 0.6,
+    'temperature': 0.7,
     'max_new_tokens': 100,  # strong length limit
     'use_cache': True,
     'remove_invalid_values': True
@@ -52,29 +61,6 @@ PROMPT_TEMPLATE = "{intro}\n\n### Instruction:\n{instruction}\n\n### Response:\n
 
 bot = Bot(token=os.environ['TG_BOT_TOKEN'])
 dp = Dispatcher(bot, storage=MemoryStorage())
-
-
-class TypingBlock(object):
-
-    def __init__(self, chat: types.Chat):
-        self.chat = chat
-        self.typing_task = None
-
-    async def __aenter__(self):
-
-        async def typing_cycle():
-            try:
-                while True:
-                    await self.chat.do("typing")
-                    await asyncio.sleep(2)
-            except asyncio.CancelledError:
-                pass
-
-        self.typing_task = asyncio.create_task(typing_cycle())
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.typing_task:
-            self.typing_task.cancel()
 
 
 @dp.message_handler(commands=["start", "reset"], state='*')
@@ -93,28 +79,48 @@ async def communication_answer(message: types.Message, state: FSMContext, is_ima
 
         text_history = "\n".join(history) + "\nYou:"
 
-        if len(history) <= 20:  # dumbiest way, but.... here we need some cumulative score from emotions model and threshold I think...
+        emotional_results = emotional_model(message.text, top_k=7)
+        emotional_results = {elem['label']: elem['score'] for elem in emotional_results}  # dict
+
+        # TODO: maybe exponential mean here for emotional scores
+        positive_score = emotional_results['joy'] + emotional_results['surprise']
+        negative_score = emotional_results['disgust'] + emotional_results['fear'] + emotional_results['anger']
+
+        min_new_tokens = None
+
+        if negative_score > 0.3:
+            min_new_tokens = 15
             prompt = PROMPT_TEMPLATE.format(intro=INTRO_PROMPT,
-                                            instruction=INSTRUCTION_PROMPT_NEW,
+                                            instruction=INSTRUCTION_PROMPT_FIX,
+                                            response=text_history)
+        elif positive_score < 0.5:
+            min_new_tokens = 3
+            prompt = PROMPT_TEMPLATE.format(intro=INTRO_PROMPT,
+                                            instruction=INSTRUCTION_PROMPT_GENERAL,
                                             response=text_history)
         else:
+            min_new_tokens = 10
             prompt = PROMPT_TEMPLATE.format(intro=INTRO_PROMPT,
-                                            instruction=INSTRUCTION_PROMPT_KNOWN,
+                                            instruction=INSTRUCTION_PROMPT_FLIRT,
                                             response=text_history)
 
-        async with TypingBlock(message.chat):
+        print(f'Positive score: {positive_score}, negative_score: {negative_score}, chosen prompt: {prompt}')
 
-            input_ids = tokenizer.encode(prompt, return_tensors='pt').cuda()
+        await message.chat.do("typing")
 
-            answer = tokenizer.batch_decode(model.generate(inputs=input_ids, **GENERATION_PARAMS))[0]
-            answer = answer[len(prompt):].strip()  # remove prompt
+        input_ids = tokenizer.encode(prompt, return_tensors='pt').cuda()
 
-            if answer.endswith("\n\n### End"):  # dumb way... must ne like in instruct_pipeline.py here
-                answer = answer[:11]
+        answer = tokenizer.batch_decode(llm_model.generate(inputs=input_ids,
+                                                           min_new_tokens=min_new_tokens,
+                                                           **GENERATION_PARAMS))[0]  # one sequence at time
+        answer = answer[len(prompt):].strip()  # remove prompt
 
-            await message.reply(answer)
+        if answer.endswith("### End"):  # dumb way... must ne like in instruct_pipeline.py here
+            answer = answer[:-7].strip()
 
-            print('Sending answer:', answer)
+        await message.reply(answer)
+
+        print('Sending answer:', answer)
 
         history = history + [f'You: {answer}']
 
