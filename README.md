@@ -40,7 +40,7 @@ Training process in notebook `lora_finetune.md`.
 
 Other models and links can be found in `raw_task_notes.md`.
 
-Finetuning was done with PEFT library and HF Trainer, params are in notebook. For 3b - 2 epochs, 7b - 1 epoch.
+Finetuning done with PEFT library and HF Trainer, params are in notebook. For 3b - 2 epochs, 7b - 1 epoch.
 
 Final metrics:
 
