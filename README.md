@@ -34,8 +34,11 @@ DailyDialog came from "DailyDialog: A Manually Labelled Multi-turn Dialogue Data
 
 ## LLM Models
 
-The `databricks/dolly-v2-3b` model was chosen, because according to the OpenLLM benchmark, this is almost the best model with a small size. Moreover, it has permission for commercial use. In addition to it, the 7b version was also trained, all the weights of LORA adapters are in models. \
-Training process in notebook lora_finetune.
+The `databricks/dolly-v2-3b` model was chosen, because according to the OpenLLM benchmark, this is almost the best model with a small size. And also this model was trained to follow the instructions, unlike the usual llama (most of other instuction-models use ShareGPT, which does not suit us, we do not create a ChatGPT clone with its bias). Following the instructions potentially means that you can control the model's responses in a dialog. \
+Moreover, dolly has permission for commercial use. In addition to it, the 7b version was also trained, all the weights of LORA adapters are in models folder. \
+Training process in notebook `lora_finetune.md`.
+
+Other models and links can be found in `raw_task_notes.md`.
 
 Finetuning was done with PEFT library and HF Trainer, params are in notebook. For 3b - 2 epochs, 7b - 1 epoch.
 
