@@ -85,7 +85,7 @@ https://github.com/lvwerra/trl/blob/main/examples/sentiment/scripts/gpt2-sentime
 Use ChatGPT or GPT-4 for eval. More ifo here: https://lmsys.org/blog/2023-03-30-vicuna/
 Stronger models than the basic? (2.8b -> 7b, 7b -> 13b, etc)
 
-## Googd emotion detectors
+## Good emotion detectors
 
 https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest
 https://huggingface.co/michellejieli/emotion_text_classifier
